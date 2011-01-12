@@ -1,0 +1,2 @@
+* Make a better execute function.
+* Figure out a nice way to analyze return codes from called system commands.
