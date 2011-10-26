@@ -1,14 +1,13 @@
 module OpenVZ
+    #
     # A simple class that allows logging at various levels.
+    #
     class Log
+
+        @known_levels = [:fatal, :error, :warn, :info, :debug]
+        @active_level = :warn
+
         class << self
-            @logger = nil
-
-            # Obtain the class name of the currently configured logger
-            def logger
-                @logger.class
-            end
-
             # Logs at info level
             def info(msg)
                 log(:info, msg)
@@ -34,34 +33,24 @@ module OpenVZ
                 log(:error, msg)
             end
 
-            # handle old code that relied on this class being a singleton
-            def instance
-                self
-            end
-
-            # increments the active log level
-            def cycle_level
-                @logger.cycle_level if @configured
-            end
-
-            # logs a message at a certain level
+            # logs message at level
             def log(level, msg)
-                t = Time.new.strftime("%H:%M:%S")
-                STDERR.puts "#{t}: #{level}: #{from}: #{msg}"
+                puts "#{@known_levels.index(level)} <= #{@known_levels.index(@active_level)}"
+                if @known_levels.index(level) <= @known_levels.index(@active_level)
+                    t = Time.new.strftime("%H:%M:%S")
+                    STDERR.puts "#{t}: #{level}: #{from}: #{msg}"
+                end
             end
 
-            # sets the logger class to use
-            def set_logger(logger)
-                @logger = logger
+            # Set the log level.
+            def set_level(level)
+                @active_level = level
             end
 
-
-            # figures out the filename that called us
+            # filename that called us
             def from
                 from = File.basename(caller[2])
             end
         end
     end
 end
-
-# vi:tabstop=4:expandtab:ai:filetype=ruby
