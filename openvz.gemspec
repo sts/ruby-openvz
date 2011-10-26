@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
     s.description       = 'OpenVZ is a container based virtualization for Linux. This API will
                            allow you to easily write tools to manipulate containers on a host.'
 
-    s.extra_rdoc_files  = %w[LICENSE]
+    s.extra_rdoc_files  = %w[COPYING]
 
     # = MANIFEST =
     s.files = %w[
