@@ -1,21 +1,21 @@
-# == Ruby OpenVZ Library
 #
-# Framework to automate OpenVZ virtual machine administration.
-#
+# OpenVZ API
 #
 module OpenVZ
 
-    class OpenVZ
+    autoload :Log,         "openvz/log"
+    autoload :Shell,       "openvz/shell"
+    autoload :Inventory,   "openvz/inventory"
+    autoload :Vendor,      "openvz/vendor"
+    autoload :Container,   "openvz/container"
+    autoload :Util,        "openvz/util"
+    autoload :ConfigHash,  "openvz/confighash"
 
-	require 'openvz/container'
-	require 'openvz/vnode'
-	require 'openvz/util'
-
-    	VERSION = "1.0"
-    	
-    	def self.version
-    	    VERSION
-    	end
+    VERSION = "1.1"
+    
+    def self.version
+        VERSION
     end
 
+    OpenVZ::Vendor.load_vendored
 end

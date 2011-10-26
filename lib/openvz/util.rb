@@ -1,88 +1,39 @@
 module OpenVZ
-
     class Util
+        # Generate a mac address based upon three different variables
+        def generate_mac(ctid, vlanid, for_host)
+            ctid_str     = '%06i' % ctid
+            vlanid_str   = '%04i' % vlanid
 
-    def initialize(ctid, dont_execute_cmds = nil)
-        @ctid  = ctid
-        @dont_execute_cmds = dont_execute_cmds
-
-        unless @ctid
-            return nil
-        end
-    end
-
-    # Borrowed from puppet util
-    def execute(command)
-        require "tempfile"
-
-        if command.is_a?(Array)
-             command = command.flatten.collect { |i| i.to_s }
-             str     = command.join(" ")
-        else
-             raise ArgumentError, "Must pass an array to execute()"
-        end
-
-        puts "Executing '%s'" % str
-
-        if @dont_execute_cmds
-            return true
-        end
-
-        output_file = Tempfile.new("mcollective-openvz-agent.out")
-        error_file  = Tempfile.new("mcollective-openvz-agent.err")
-        stdin_file  = "/dev/null"
-
-        child_pid = Kernel.fork
+            bridgemac    = [0,0,0,0,0,0]
+            bridgemac[1] = ctid_str[0..1]
+            bridgemac[2] = ctid_str[2..3]
+            bridgemac[3] = ctid_str[4..5]
+            bridgemac[4] = vlanid_str[0..1]
+            bridgemac[5] = vlanid_str[2..3]
         
-        if child_pid
-            child_status = (Process.waitpid2(child_pid)[1]).to_i >> 8
-        else
-            # Child process executes this
-            Process.setsid
-            begin
-                $stdin.reopen(stdin_file)
-                $stdout.reopen(output_file)
-                $stderr.reopen(error_file)
-
-                3.upto(256){|fd| IO::new(fd).close rescue nil}
-
-                ENV['LANG'] = ENV['LC_ALL'] = ENV['LC_MESSAGES'] = ENV['LANGUAGE'] = 'C'
-
-                if command.is_a?(Array)
-                    Kernel.exec(*command)
-                else
-                    Kernel.exec(command)
-                end
-                
-                rescue => detail
-                    puts detail.to_s
-                    exit!(222)
-                end
+            if for_host
+                bridgemac[0] = '12'
+            else
+                bridgemac[0] = '02'
             end
+        
+            # assemble macstring   
+            '%s:%s:%s:%s:%s:%s' % bridgemac[0,6]
+        end    
 
-            unless FileTest.exists?(output_file.path)
-                puts "sleeping"
-                sleep 0.5
-                unless FileTest.exists?(output_file.path)
-                    puts "sleeping 2"
-                    sleep 1
-                    unless FileTest.exists?(output_file.path)
-                        puts "Warning: could not get output"
-                        output = ""
+        # Search for a specific pattern and replace it with string
+        # in file.
+        def searchandreplace(file, pattern, replace)
+            if File.writeable?(file)
+                File.open(file, 'w') do |f|
+                    $<.each_line do |line|
+                        f.puts line.gsub(Regexp.new(pattern), replace)
                     end
                 end
+            else
+                raise "File not writeable: #{file}."
             end
-
-            unless output
-                output = output_file.open.read
-                output_file.close(true)
-            end
-
-            unless child_status == 0
-                raise "\n\nCommand: #{command}\nExecution failed with return code: #{child_status}\nOutput:\n  #{output}\n\n"
-            end
-
-            output
         end
     end
 end
