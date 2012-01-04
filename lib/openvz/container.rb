@@ -28,6 +28,7 @@ module OpenVZ
     class Container
 
         attr_accessor :config
+        attr_reader :ctid
 
         class StatemachineError < StandardError;end
         class Config            < ::OpenVZ::ConfigHash ; end
