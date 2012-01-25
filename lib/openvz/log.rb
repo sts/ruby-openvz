@@ -35,7 +35,6 @@ module OpenVZ
 
             # logs message at level
             def log(level, msg)
-                puts "#{@known_levels.index(level)} <= #{@known_levels.index(@active_level)}"
                 if @known_levels.index(level) <= @known_levels.index(@active_level)
                     t = Time.new.strftime("%H:%M:%S")
                     STDERR.puts "#{t}: #{level}: #{from}: #{msg}"
