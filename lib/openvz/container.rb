@@ -223,6 +223,19 @@ module OpenVZ
         end
 
 
+        # Return the current uptime in seconds.
+        # Return zero if the container is not running.
+        #
+        # @example
+        #   puts container.uptime()
+        #   1188829
+        def uptime
+          return 0 unless status.include? "running"
+          raw = command "cat /proc/uptime"
+          Log.debug("Container (#{@ctid}) uptime requested: #{raw}")
+          raw.split(/\W/).first.to_i
+        end
+
 
         ####
         #### Helper methods
