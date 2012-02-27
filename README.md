@@ -60,19 +60,19 @@ You can as well use the build in functions to provision a new container.
 </pre>
 
 
-Deboostrapping Containers
+Debootstrapping Containers
 -------------------------
 
-If your host is running Debian and you want to boostrap a new Debian container,
-you do not have to use a template, just use deboostrap.
+If your host is running Debian and you want to bootstrap a new Debian container,
+you do not have to use a template, just use debootstrap.
 
 <pre>
  container = OpenVZ::Container.new('110')
 
- container.create( :ostemplate => 'debain-6.0-boostrap',
+ container.create( :ostemplate => 'debain-6.0-bootstrap',
                    :config     => 'vps.basic' )
 
- container.deboostrap( :dist   => 'squeeze',
+ container.debootstrap( :dist   => 'squeeze',
                        :mirror => 'http://cdn.debian.net/debian' )
 
  container.set( :nameserver => '8.8.8.8',
@@ -95,9 +95,9 @@ you do that:
  mkdir /tmp/empty-template
  # We need a file in the tarball since vzcreate barfs on empty tarballs
  touch /tmp/empty-template/BOOSTRAPPED
- tar -zc -C /tmp/empty-template . -f debian-6.0-boostrap.tar
- gzip debian-6.0-boostrap.tar
- mv debian-6.0-boostrap.tar.gz /var/lib/vz/template/cache
+ tar -zc -C /tmp/empty-template . -f debian-6.0-bootstrap.tar
+ gzip debian-6.0-bootstrap.tar
+ mv debian-6.0-bootstrap.tar.gz /var/lib/vz/template/cache
 </pre>
 
 
