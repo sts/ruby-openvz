@@ -92,6 +92,22 @@ module OpenVZ
         end
 
 
+        # Checkpoint the container
+        #
+        def checkpoint(snapshot_path)
+            cmd = "#{@vzctl} chkpnt #{@ctid} --dumpfile #{snapshot_path}"
+            execute(cmd)
+        end
+
+
+        # Restore a checkpoint
+        #
+        def restore(snapshot_path)
+            cmd = "#{@vzctl} restore #{@ctid} --dumpfile #{snapshot_path}"
+            execute(cmd)
+        end
+
+
         # Update one or multiple Container properties and keep the configration
         # object up to date
         #
