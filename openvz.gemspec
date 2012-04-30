@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
     s.name              = 'openvz'
-    s.version           = '1.4'
-    s.date              = '2011-10-26'
+    s.version           = '1.5'
+    s.date              = '2012-04-30'
     s.authors           = 'Stefan Schlesinger'
     s.email             = 'sts@ono.at'
     s.homepage          = 'http://github.com/sts/ruby-openvz'
