@@ -11,7 +11,7 @@ module OpenVZ
     autoload :Util,        "openvz/util"
     autoload :ConfigHash,  "openvz/confighash"
 
-    VERSION = "1.5"
+    VERSION = "1.5.1"
     
     def self.version
         VERSION
