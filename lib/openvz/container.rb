@@ -31,12 +31,14 @@ module OpenVZ
         attr_reader :ctid
 
         class StatemachineError < StandardError;end
+        class ContainerError < StandardError;end
         class Config            < ::OpenVZ::ConfigHash ; end
 
 
         def initialize(ctid=false)
             @ctid       = ctid
-            @vzctl      = "/usr/sbin/vzctl"
+            @vzctl      = "sudo /usr/sbin/vzctl"
+            @vzmigrate  = "sudo /usr/sbin/vzmigrate"
             @configfile = "/etc/vz/conf/#{ctid}.conf"
 
             @config     = Config.new(load_config_file)
@@ -104,6 +106,13 @@ module OpenVZ
         #
         def restore(snapshot_path)
             cmd = "#{@vzctl} restore #{@ctid} --dumpfile #{snapshot_path}"
+            execute(cmd)
+        end
+        
+        # Migrate container to another node
+        #
+        def migrate(destination_address, options=%w(--remove-area yes --online --rsync=-az))
+            cmd = "#{@vzmigrate} #{options.join ' '} #{destination_address} #{@ctid}"
             execute(cmd)
         end
 
@@ -357,15 +366,7 @@ module OpenVZ
 
         # Execute a System Command
         def execute(cmd)
-
-            Log.debug("#{cmd}")
-
-            s = Shell.new("#{cmd}", :cwd => "/tmp")
-            s.runcommand
-            if s.status.exitstatus != 0
-                raise "Cannot execute: '#{cmd}'. Return code: #{s.status.exitstatus}. Stderr: #{s.stderr}"
-            end
-            s.stdout
+            Util.execute(cmd)
         end
     end
 end

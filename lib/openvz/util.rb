@@ -35,5 +35,17 @@ module OpenVZ
                 raise "File not writeable: #{file}."
             end
         end
+        
+        # Execute a System Command
+        def self.execute(cmd, params = {:cwd => "/tmp"})
+            Log.debug("#{cmd}")
+
+            s = Shell.new("#{cmd}", params)
+            s.runcommand
+            if s.status.exitstatus != 0
+                raise "Cannot execute: '#{cmd}'. Return code: #{s.status.exitstatus}. Stderr: #{s.stderr}"
+            end
+            s.stdout
+        end
     end
 end
