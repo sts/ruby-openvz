@@ -31,14 +31,13 @@ module OpenVZ
         attr_reader :ctid
 
         class StatemachineError < StandardError;end
-        class ContainerError < StandardError;end
         class Config            < ::OpenVZ::ConfigHash ; end
 
 
         def initialize(ctid=false)
             @ctid       = ctid
-            @vzctl      = "sudo /usr/sbin/vzctl"
-            @vzmigrate  = "sudo /usr/sbin/vzmigrate"
+            @vzctl      = "/usr/sbin/vzctl"
+            @vzmigrate  = "/usr/sbin/vzmigrate"
             @configfile = "/etc/vz/conf/#{ctid}.conf"
 
             @config     = Config.new(load_config_file)
