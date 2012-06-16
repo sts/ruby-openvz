@@ -21,7 +21,7 @@ module OpenVZ
     # @example Container Creation
     #   c = Container.new("999")
     #   c.create( :ostemplate => "debian-6.0-bootstrap", :config => "vps.unlimited" )
-    #   c.debootstrap( :dist => "squeeze", :mirror => "http://ftp.at.debian.org" )
+    #   c.debootstrap( :dist => "squeeze", :mirror => "http:Z//ftp.at.debian.org" )
     #   c.cp_into(:src => "/etc/resolv.conf", :dest => "/etc/resolv.conf")
     #   c.start
     #   c.command("hostname -f")
@@ -258,6 +258,16 @@ module OpenVZ
           raw = command "cat /proc/uptime"
           Log.debug("Container (#{@ctid}) uptime requested: #{raw}")
           raw.split(/\W/).first.to_i
+        end
+
+        # Add veth to a CT
+        # vzctl set <CTID> --netif_add <ifname>[,<mac>,<host_ifname>,<host_mac>,<bridge>]
+        #
+        # @param [Hash] interface settings (keys as listed above)
+        def add_veth veth
+          cmd = "#{@vzctl} set #{@ctid} --netif_add #{veth[:ifname]},#{veth[:mac]},#{veth[:host_ifname]}," \
+                "#{veth[:host_mac]}, #{veth[:bridge]}"
+          execute(cmd)
         end
 
 
