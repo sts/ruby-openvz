@@ -37,6 +37,7 @@ module OpenVZ
         def initialize(ctid=false)
             @ctid       = ctid
             @vzctl      = "/usr/sbin/vzctl"
+            @vzmigrate  = "/usr/sbin/vzmigrate"
             @configfile = "/etc/vz/conf/#{ctid}.conf"
 
             @config     = Config.new(load_config_file)
@@ -104,6 +105,13 @@ module OpenVZ
         #
         def restore(snapshot_path)
             cmd = "#{@vzctl} restore #{@ctid} --dumpfile #{snapshot_path}"
+            execute(cmd)
+        end
+        
+        # Migrate container to another node
+        #
+        def migrate(destination_address, options=%w(--remove-area yes --online --rsync=-az))
+            cmd = "#{@vzmigrate} #{options.join ' '} #{destination_address} #{@ctid}"
             execute(cmd)
         end
 
@@ -252,6 +260,16 @@ module OpenVZ
           raw.split(/\W/).first.to_i
         end
 
+        # Add veth to a CT
+        # vzctl set <CTID> --netif_add <ifname>[,<mac>,<host_ifname>,<host_mac>,<bridge>]
+        #
+        # @param [Hash] interface settings (keys as listed above)
+        def add_veth veth
+          cmd = "#{@vzctl} set #{@ctid} --netif_add #{veth[:ifname]},#{veth[:mac]},#{veth[:host_ifname]}," \
+                "#{veth[:host_mac]}, #{veth[:bridge]}"
+          execute(cmd)
+        end
+
 
         ####
         #### Helper methods
@@ -357,15 +375,7 @@ module OpenVZ
 
         # Execute a System Command
         def execute(cmd)
-
-            Log.debug("#{cmd}")
-
-            s = Shell.new("#{cmd}", :cwd => "/tmp")
-            s.runcommand
-            if s.status.exitstatus != 0
-                raise "Cannot execute: '#{cmd}'. Return code: #{s.status.exitstatus}. Stderr: #{s.stderr}"
-            end
-            s.stdout
+            Util.execute(cmd)
         end
     end
 end
