@@ -21,7 +21,7 @@ module OpenVZ
     # @example Container Creation
     #   c = Container.new("999")
     #   c.create( :ostemplate => "debian-6.0-bootstrap", :config => "vps.unlimited" )
-    #   c.debootstrap( :dist => "squeeze", :mirror => "http:Z//ftp.at.debian.org" )
+    #   c.debootstrap( :dist => "squeeze", :mirror => "http://ftp.at.debian.org" )
     #   c.cp_into(:src => "/etc/resolv.conf", :dest => "/etc/resolv.conf")
     #   c.start
     #   c.command("hostname -f")
