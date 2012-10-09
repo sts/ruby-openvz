@@ -205,8 +205,53 @@ module OpenVZ
             #                        '#\1')
         end
 
+        # Write into or copy a file into a container
+        #
+        # The destination file will be prepended with the containers private directory. If
+        # you specify a source, this is relative to the virtualization hosts root directory.
+        #
+        #
+        # @example Create /etc/hostname
+        #
+        #   container.file('/etc/hostname', :content => 'vm01')
+        #
+        # @example Copy a file from /etc/vz/template.conf/hosts (host) to /etc/hosts (container)
+        #
+        #   container.file('/etc/hosts', :source => '/etc/hosts'
+        #
+        #
+        # @param filename Destination filename, relative to the containers root
+        # @param :source  The source filename, relative to the virtualization hosts root directory
+        # @param :content Pass a string which will be written to the file.
+        # @param :mode    Specify the file mode.
+        def file(filename, options={})
+            unless filename
+                raise ArgumentError, "file requires destination filename as first argument."
+            end
 
-        # Copy a file from the hardware node into the container.
+            if options[:source] and options[:content]
+                raise ArgumentError, "file can either take :source or :content as an argument."
+            end
+
+            destination ="#{@config.ve_private}/#{filename}"
+
+            if options[:source]
+                FileUtils.cp(options[:source], destination)
+            end
+
+            if options[:content]
+                File.open(destination, 'w') { |file|
+                    file.write(options[:content])
+                }
+            end
+
+            if options[:mode]
+                FileUtils.chmod options[:mode], destination
+            end
+        end
+
+
+        # Copy a file from the hardware node into the container. (OBSOLETE)
         #
         # @example Copy resolv.conf
         #     container.cp_into(

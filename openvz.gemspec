@@ -5,7 +5,7 @@ require 'openvz'
 Gem::Specification.new do |s|
     s.name              = 'openvz'
     s.version           = OpenVZ::VERSION
-    s.date              = '2012-06-15'
+    s.date              = '2012-10-09'
     s.authors           = 'Stefan Schlesinger'
     s.email             = 'sts@ono.at'
     s.homepage          = 'http://github.com/sts/ruby-openvz'
