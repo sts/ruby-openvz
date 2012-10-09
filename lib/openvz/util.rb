@@ -1,5 +1,5 @@
 module OpenVZ
-    class Util
+    class Util     
         # Generate a mac address based upon three different variables
         def generate_mac(ctid, vlanid, for_host)
             ctid_str     = '%06i' % ctid
@@ -34,6 +34,26 @@ module OpenVZ
             else
                 raise "File not writeable: #{file}."
             end
+        end
+        
+        class << self
+            # Class variable which denotes whether execute commands using sudo
+            # should be true or false
+            attr_accessor :enforce_sudo
+        end
+        
+        # Execute a System Command
+        def self.execute(cmd, params = {:cwd => "/tmp"})
+            cmd = "sudo " + cmd if self.enforce_sudo 
+          
+            Log.debug("#{cmd}")
+            
+            s = Shell.new("#{cmd}", params)
+            s.runcommand
+            if s.status.exitstatus != 0
+                raise "Cannot execute: '#{cmd}'. Return code: #{s.status.exitstatus}. Stderr: #{s.stderr}"
+            end
+            s.stdout
         end
     end
 end
