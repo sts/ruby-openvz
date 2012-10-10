@@ -4,6 +4,9 @@ OpenVZ API
 OpenVZ is a container based virtualization for Linux. This API will allow you
 to easily write tools to manipulate containers on a host.
 
+Full and up to date ruby doc available at:
+http://rubydoc.info/github/sts/ruby-openvz/master/frames
+
 USAGE
 =====
 
@@ -78,6 +81,8 @@ you do not have to use a template, just use debootstrap.
  container.set( :nameserver => '8.8.8.8',
                 :ipadd      => '10.0.0.2',
                 :hostname   => 'mia.ono.at' )
+
+ container.file( '/etc/bash.bashrc', :source => '/etc/vz/template/bashrc' )
 
  container.start
 
