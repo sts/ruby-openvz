@@ -5,7 +5,7 @@ module OpenVZ
         end
       
         def load
-            Util.execute("#{@vzlist} -a").each { |l|
+            Util.execute("#{@vzlist} -a").each_line { |l|
                 # inventarize a container object for each avaiable container.
                 if l =~ /^\s+(\d+)\s+(.*)\s+(running|stopped)\s+(.*)\s\s(.*)$/
                     self[$1] = Container.new($1)
