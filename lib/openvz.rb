@@ -2,7 +2,6 @@
 # OpenVZ API
 #
 module OpenVZ
-
     autoload :Log,         "openvz/log"
     autoload :Shell,       "openvz/shell"
     autoload :Inventory,   "openvz/inventory"
@@ -15,6 +14,4 @@ module OpenVZ
     def self.version
         VERSION
     end
-
-    OpenVZ::Vendor.load_vendored
 end
