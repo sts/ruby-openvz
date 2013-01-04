@@ -63,6 +63,7 @@ module OpenVZ
 
         # Actually does the systemu call passing in the correct environment, stdout and stderr
         def runcommand
+            require 'systemu'
             opts = {"env"    => @environment,
                     "stdout" => @stdout,
                     "stderr" => @stderr,
