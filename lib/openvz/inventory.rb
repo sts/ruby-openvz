@@ -1,6 +1,8 @@
 module OpenVZ
     class Inventory < ConfigHash
-        def initialize()
+        def initialize(data={})
+          @data = {}
+          update!(data)
           @vzlist = "/usr/sbin/vzlist"
         end
       
