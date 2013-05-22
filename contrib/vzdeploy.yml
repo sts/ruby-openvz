@@ -1,0 +1,100 @@
+---
+# Use this Debian mirror for debootstrap.
+mirror: http://cdn.debian.net/debian
+
+# Debian release you want to roll.
+release: squeeze
+
+# Debian arichitecture you want to roll.
+architecture: amd64
+
+# When veth is used, name of the bridge the interface is attached to.
+# I usually follow the following naming scheme:
+#
+# vzbreth0 .... bridged with eth0
+# vzbrbond0 ... bridged with bond0
+# vzbr400 ..... bridged with vlan400 (eth1.400)
+default_bridge: vzbrbond0
+
+# When veth is used, how to call the interface within the container.
+default_interface: eth0
+
+# Path to openvz templates (we will create empty template files here,
+# for vzctl create.
+vz_template_path: /var/lib/vz/template
+
+# List of packages to exclude from debootstrap for squeeze.
+packages_exclude_squeeze:
+    - isc-dhcp-client
+    - isc-dhcp-common
+    - dhcp-client
+    - dhcp3-client
+    - dhcp3-common
+    - dmidecode
+    - gcc-4.3
+    - base
+    - nano
+    - module-init-tools
+    - tasksel
+    - tasksel-data
+    - libdb4.5
+    - libsasl2-2
+    - libgnutls26
+    - libconsole
+    - libtasn1-3
+    - liblzo2-2
+    - libgcrypt11
+    - libgnutls26
+
+# List of packages to include.
+packages_include_squeeze:
+    - dnsutils
+    - file
+    - less
+    - libreadline6
+    - locales
+    - lsof
+    - ltrace
+    - mtr-tiny
+    - openssh-server
+    - screen
+    - strace
+    - sudo
+    - tcpdump
+    - telnet
+    - tmux
+    - unattended-upgrades
+    - vim-nox
+    - zsh
+
+packages_exclude_wheezy:
+    - dmidecode
+    - gcc-4.7-base
+    - isc-dhcp-client
+    - isc-dhcp-common
+    - kmod
+    - tasksel
+    - udev
+    - libgnutls26
+    - libgcrypt11
+    - libdb5.1
+
+packages_include_wheezy:
+    - dnsutils
+    - file
+    - less
+    - libreadline6
+    - locales
+    - lsof
+    - ltrace
+    - mtr-tiny
+    - openssh-server
+    - screen
+    - strace
+    - sudo
+    - tcpdump
+    - telnet
+    - tmux
+    - unattended-upgrades
+    - vim-nox
+    - zsh

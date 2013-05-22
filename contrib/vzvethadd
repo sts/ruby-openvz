@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+#
+# Wraps vzctl set --netif_add, and generates locally-administrated MAC addresses
+# for all involved interfaces.
+#
+
+def gen_mac(ctid, vlanid, for_host)
+    ctid_str = '%06i' % ctid
+    vlanid_str = '%04i' % vlanid
+    bridgemac = [0,0,0,0,0,0]
+    bridgemac[1] = ctid_str[0..1]
+    bridgemac[2] = ctid_str[2..3]
+    bridgemac[3] = ctid_str[4..5]
+    bridgemac[4] = vlanid_str[0..1]
+    bridgemac[5] = vlanid_str[2..3]
+
+    if for_host
+        bridgemac[0] = '12'
+    else
+        bridgemac[0] = '02'
+    end
+
+    # assemble macstring
+    '%s:%s:%s:%s:%s:%s' % [bridgemac[0], bridgemac[1], bridgemac[2], bridgemac[3], bridgemac[4], bridgemac[5]]
+end
+
+def configure_ct(ctid, vlanid, ct_ifname)
+    bridge = 'vzbr%d' % vlanid
+    ct_mac = gen_mac(ctid, vlanid, false)
+    host_mac = gen_mac(ctid, vlanid, true)
+    host_ifname = 'veth%i.%i' % [ctid,vlanid]
+
+    puts "Configuring device %s in CT%d, bridged to %s" % [ct_ifname, ctid, bridge]
+    puts "CT interface:     % -15s   MAC: %s" % [ct_ifname, ct_mac]
+    puts "Host interface:   % -15s   MAC: %s" % [host_ifname, host_mac]
+
+    system("vzctl set %d --save --netif_add %s,%s,%s,%s,%s" % [ctid, ct_ifname,ct_mac,host_ifname,host_mac,bridge])
+end
+
+if ARGV.length != 3
+    puts "Usage: vzvethadd ctid vlanid ifname"
+    puts ""
+    puts ""
+    puts "To add an eth0 to container 100211 which is bridged over vzbr400:"
+    puts ""
+    puts "   vzvethadd 100211 400 eth0"
+    puts ""
+    puts ""
+    puts "To add an eth0 to container 100211 which is bridged over vzbreth0:"
+    puts ""
+    puts "   vzvethadd 100211 eth0 eth0"
+    puts ""
+    puts ""
+    puts "To undo changes done by vzvethadd, run:"
+    puts ""
+    puts "   vzctl set ctid --netif_del ifname."
+    exit 1
+end
+
+ctid = ARGV[0]
+vlanid = ARGV[1]
+ifname = ARGV[2]
+configure_ct(ctid, vlanid, ifname)

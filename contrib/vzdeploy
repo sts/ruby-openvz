@@ -1,0 +1,298 @@
+#!/usr/bin/env ruby
+
+# Try to optionally load rubygems -> we don't need that on Debian HN
+begin
+    require 'rubygems'
+rescue LoadError
+    puts "# You seem to run vzdeploy on Debian, rubygems could not be loaded."
+end
+
+require 'openvz'
+require 'yaml'
+require 'optparse'
+
+class VzDeploy
+    attr_accessor :config
+
+    def initialize
+        @config  = read_config
+        get_numeric_release
+    end
+
+    def deploy(ctid)
+        raise ArgumentError, "You need to specify a container id for creation" unless ctid
+
+        puts "# Ctid         : #{ctid}"
+        puts "# Hostname     : #{@config["hostname"]}"
+        puts "# Architecture : #{@config["architecture"]}"
+        puts "# Release:     : #{@config["release"]}"
+        puts "# IP Address   : #{@config["ipaddress"]}"
+        puts "# Bridge:      : #{@config["default_bridge"]}"
+
+        @c = OpenVZ::Container.new(ctid)
+
+        get_numeric_release
+
+        if template_file_exists?
+            create_container
+            configure_hostname
+            fix_inittab
+            configure_sourceslist
+
+            if @config["venet"]
+                add_venet
+            else
+                add_interface
+                configure_interface
+            end
+
+            if @config["upgrade"]
+                start_container
+                upgrade_container
+            end
+
+            if @config["puppet"]
+                install_puppet
+            end
+        end
+    end
+
+    def read_config
+        file = File.expand_path("/etc/vz/vzdeploy.yml")
+
+        unless File.readable?(file)
+            raise "Cannot read configuration file in /etc/vz/deploy.yml"
+        end
+
+        return YAML.load(File.read(file))
+    end
+
+    def create_container
+        puts "* Creating container configuration"
+        @c.create(:ostemplate => "debian-#{@config["releaseno"]}-bootstrap", :config => "basic")
+
+        puts "* Bootstrapping base system via debootstrap"
+        @c.debootstrap(
+            :dist    => @config["release"],
+            :arch    => @config["architecture"],
+            :mirror  => @config["mirror"],
+            :exclude => @config["packages_exclude_#{@config["release"]}"].join(","),
+            :include => @config["packages_include_#{@config["release"]}"].join(",")
+        )
+
+        @c.set(:hostname => @config["hostname"])
+    end
+
+    def upgrade_container
+        puts "* Updating container packages"
+        @c.command('aptitude update')
+        @c.command('apt-key update')
+        @c.command('aptitude upgrade -y')
+        @c.command('aptitude full-upgrade -y')
+    end
+
+    def install_puppet
+        puts "* Installing puppet into the container"
+        @c.command('aptitude install -y puppet facter')
+    end
+
+    def start_container
+        puts "* Starting container"
+        @c.start
+
+        # Make sure the network knows about us
+        sleep 1
+        @c.command('ping -c1 8.8.8.8')
+        sleep 5
+    end
+
+    def fix_inittab
+        puts "* Fixing initab in #{@c.config.ve_private}/etc/inittab"
+
+        inittab  = File.expand_path("#{@c.config.ve_private}/etc/inittab")
+
+        # Read and replace
+        contents = File.read(inittab)
+        contents.gsub!(/^(?!#)(.*\/sbin\/getty)/, "#\\1")
+
+        # Store
+        File.open(inittab, "w+") { |file|
+            file.write(contents)
+        }
+    end
+
+    def configure_nameserver
+        puts "* Setting nameserver #{@config["default_nameserver"]}"
+        @c.file("/etc/resolv.conf", :content => "nameserver #{@config["default_nameserver"]}")
+    end
+
+    def configure_hostname
+        hostname, dnsdomainname = @config['hostname'].split(/\./, 2)
+
+        puts "* Configuring hostname and hosts file #{hostname}.#{dnsdomainname}"
+
+        @c.file("/etc/hosts", :content =>
+        "   127.0.0.1   localhost.localdomain localhost
+            ::1         localhost ip6-localhost ip6-loopback
+            fe00::0     ip6-localnet
+            ff00::0     ip6-mcastprefix
+            ff02::1     ip6-allnodes
+            ff02::2     ip6-allrouters
+
+            #{@config["ipaddress"]}    #{hostname}.#{dnsdomainname} #{hostname}
+        ".gsub!(/^\s{12}/, ''))
+    end
+
+    def configure_sourceslist
+        mirror = @config["mirror"]
+
+        puts "* Configuring sources list. Mirror: #{mirror}"
+
+        @c.file("/etc/apt/sources.list", :content =>
+        "deb #{mirror} squeeze         main contrib non-free
+         deb http://security.debian.org      squeeze/updates main contrib non-free
+        ".gsub!(/^\s+/, ''))
+    end
+
+    def configure_interface
+        interface = @config["default_interface"]
+        ipaddress = @config["ipaddress"]
+        gateway   = @config["ipaddress"].gsub(/\.\d+$/, '.1')
+
+        puts "* Configuring interface #{@config["default_interface"]}/#{@config["ipaddress"]}"
+
+        @c.file("/etc/network/interfaces", :content =>
+        "   auto lo
+            iface lo inet loopback
+
+            auto #{interface}
+            iface #{interface} inet static
+                address #{ipaddress}
+                gateway #{gateway}
+                netmask 255.255.255.0
+
+        ".gsub!(/^\s{12}/, ''))
+    end
+
+    def add_venet
+        ipaddress = @config["ipaddress"]
+
+        @c.set(:ip_add, ipaddress)
+    end
+
+
+    def add_interface
+        ctid        = @c.ctid
+        ct_ifname   = @config["default_interface"]
+        bridge      = @config["default_bridge"]
+        vlanid      = @config["default_bridge"].to_s.gsub(/[a-zA-Z]+/, '')
+
+        ct_mac      = gen_mac(ctid, vlanid, false)
+        host_mac    = gen_mac(ctid, vlanid, true)
+        host_ifname = 'veth%i.%i' % [ctid, vlanid]
+
+        puts "* Adding interface ctid: #{ctid}, bridge: #{bridge}, vlanid: #{vlanid}, ifname: #{ct_ifname}/#{host_ifname}"
+
+        @c.set( :netif_add => "%s,%s,%s,%s,%s" % [ ct_ifname, ct_mac, host_ifname, host_mac, bridge ])
+    end
+
+    def gen_mac(ctid, vlanid, for_host)
+        ctid_str = '%06i' % ctid
+        vlanid_str = '%04i' % vlanid
+        bridgemac = [0,0,0,0,0,0]
+        bridgemac[1] = ctid_str[0..1]
+        bridgemac[2] = ctid_str[2..3]
+        bridgemac[3] = ctid_str[4..5]
+        bridgemac[4] = vlanid_str[0..1]
+        bridgemac[5] = vlanid_str[2..3]
+
+        if for_host
+            bridgemac[0] = 'F2'
+        else
+            bridgemac[0] = 'E2'
+        end
+
+        # assemble macstring
+        '%s:%s:%s:%s:%s:%s' % [bridgemac[0], bridgemac[1], bridgemac[2], bridgemac[3], bridgemac[4], bridgemac[5]]
+    end
+
+    def template_file_exists?
+        filename = File.expand_path("#{@config["vz_template_path"]}/cache/debian-#{@config["releaseno"]}-bootstrap.tar.gz")
+
+        unless File.exists?(filename)
+            puts "\n# The openvz template file doesn't exist.\n#"
+            puts "# PLEASE JUST RUN THE LAST COMMAND AGAIN AND PIPE THE OUTPUT TO | bash\n#"
+
+            puts "TARGETFILE=#{filename}
+                  TEMPDIR=`mktemp -d` || exit 1
+                  TEMPFILE=`mktemp` || exit 1
+                  touch $TEMPDIR/BOOTSTRAPPED
+                  tar -zc -C $TEMPDIR . -f $TEMPFILE
+                  mv $TEMPFILE $TARGETFILE
+                  rm $TEMPDIR/BOOTSTRAPPED
+                  rmdir $TEMPDIR".gsub!(/^\s{18}/, '')
+            return false
+        end
+
+        true
+    end
+
+    def get_numeric_release
+        case @config["release"]
+            when "etch"
+                @config["releaseno"] = "4.0"
+            when "lenny"
+                @config["releaseno"] = "5.0"
+            when "squeeze"
+                @config["releaseno"] = "6.0"
+            when "wheezy"
+                @config["releaseno"] = "7.0"
+        end
+    end
+
+end
+
+vzdeploy = VzDeploy.new
+
+optparse = OptionParser.new do |opts|
+    opts.banner = "Usage: vzdeploy [options] ctid hostname ip_address"
+
+    opts.on('-a', '--architecture ARCH', 'Define the architecture used when bootstraping') do |arch|
+        vzdeploy.config["architecture"] = arch
+    end
+
+    opts.on('-b', '--bridge BRIDGE', 'Use this bridge pattern instead, specify either interface name or vlan id (eth0, 400).') do |br|
+        vzdeploy.config["default_bridge"] = br
+    end
+
+    opts.on('-i', '--interface INTERFACE', 'Use this interface name instead') do |int|
+        vzdeploy.config["default_interface"] = int
+    end
+
+    opts.on('-p', '--puppet', 'Install puppet into the container as well.') do
+        vzdeploy.config["puppet"] = true
+    end
+
+    opts.on('-r', '--release RELEASE', 'Specify the Debian release to bootstrap.') do |rel|
+        vzdeploy.config["release"] = rel
+    end
+
+    opts.on('-u', '--upgrade', 'Start and automatically upgrade the machine after bootstrap.') do
+        vzdeploy.config["upgrade"] = true
+    end
+
+    opts.on('--venet', 'Configure a venet interface instead of veth.') do
+        vzdeploy.config["venet"] = true
+    end
+end
+optparse.parse!
+
+if ARGV.size < 3
+    puts optparse.help
+    exit 1
+end
+
+
+vzdeploy.config["ipaddress"] = ARGV[2]
+vzdeploy.config["hostname"] = ARGV[1]
+vzdeploy.deploy(ARGV[0])
