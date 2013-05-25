@@ -32,16 +32,10 @@ Used to add veth network interface to a container.
 
 <pre>
 Usage: vzvethadd ctid vlanid ifname
-
-To add an eth0 to container 100211 which is bridged over vzbr400:
-
+To add an eth0 to container 100211 which is bridged with vzbr400:
    vzvethadd 100211 400 eth0
-
-To add an eth0 to container 100211 which is bridged over vzbreth0:
-
+To add an eth0 to container 100211 which is bridged with vzbreth0:
    vzvethadd 100211 eth0 eth0
-
 To undo changes done by vzvethadd, run:
-
    vzctl set ctid --netif_del ifname.
 </p-re>
