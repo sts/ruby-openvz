@@ -31,10 +31,12 @@ to be attached to. (RTFS add\_interface and gen\_mac methods)
 
 The recommended naming scheme:
 
+<pre>
  vzbreth0 ... bridged on eth0.
  vzbreth1 ... bridged on eth1.
  vzbrbond0 .. bridged on a bonded adapter.
  vzbr400 .... tagged vlan 400.
+</pre>
 
 I'd be glad the see push requests for the easymac-style mac generation. ;-)
 
