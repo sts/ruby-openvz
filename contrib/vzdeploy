@@ -38,6 +38,7 @@ class VzDeploy
             configure_hostname
             fix_inittab
             configure_sourceslist
+            configure_aptrecommends
 
             if @config["venet"]
                 add_venet
@@ -149,9 +150,15 @@ class VzDeploy
         puts "* Configuring sources list. Mirror: #{mirror}"
 
         @c.file("/etc/apt/sources.list", :content =>
-        "deb #{mirror} squeeze         main contrib non-free
-         deb http://security.debian.org      squeeze/updates main contrib non-free
+        "deb #{mirror} #{@config["release"]} main contrib non-free
+         deb http://security.debian.org #{@config["release"]}/updates main contrib non-free
         ".gsub!(/^\s+/, ''))
+    end
+
+    def configure_aptrecommends
+        puts "* Disabling installing recommendet packages"
+
+        @c.file("/etc/apt/apt.conf.d/100-puppet-norecommends", :content => "APT::Install-Recommends \"0\";")
     end
 
     def configure_interface
