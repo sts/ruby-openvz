@@ -192,7 +192,7 @@ class VzDeploy
         ctid        = @c.ctid
         ct_ifname   = @config["default_interface"]
         bridge      = @config["default_bridge"]
-        vlanid      = @config["default_bridge"].to_s.gsub(/[a-zA-Z]+/, '')
+        vlanid      = @config["default_bridge"].to_s.gsub(/[a-zA-Z_]+/, '')
 
         ct_mac      = gen_mac(ctid, vlanid, false)
         host_mac    = gen_mac(ctid, vlanid, true)
