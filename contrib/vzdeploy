@@ -268,7 +268,7 @@ optparse = OptionParser.new do |opts|
         vzdeploy.config["architecture"] = arch
     end
 
-    opts.on('-b', '--bridge BRIDGE', 'Use this bridge pattern instead, specify either interface name or vlan id (eth0, 400).') do |br|
+    opts.on('-b', '--bridge BRIDGE', 'Use this bridge. Specify the interface name (eg. vzbreth0)') do |br|
         vzdeploy.config["default_bridge"] = br
     end
 
@@ -276,19 +276,19 @@ optparse = OptionParser.new do |opts|
         vzdeploy.config["default_interface"] = int
     end
 
-    opts.on('-p', '--puppet', 'Install puppet into the container as well.') do
+    opts.on('-p', '--puppet', 'Install puppet into the container as well') do
         vzdeploy.config["puppet"] = true
     end
 
-    opts.on('-r', '--release RELEASE', 'Specify the Debian release to bootstrap.') do |rel|
+    opts.on('-r', '--release RELEASE', 'Specify the Debian release to bootstrap') do |rel|
         vzdeploy.config["release"] = rel
     end
 
-    opts.on('-u', '--upgrade', 'Start and automatically upgrade the machine after bootstrap.') do
+    opts.on('-u', '--upgrade', 'Start and automatically upgrade the machine after bootstrap') do
         vzdeploy.config["upgrade"] = true
     end
 
-    opts.on('--venet', 'Configure a venet interface instead of veth.') do
+    opts.on('--venet', 'Configure a venet interface instead of veth') do
         vzdeploy.config["venet"] = true
     end
 end
