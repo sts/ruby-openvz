@@ -27,7 +27,12 @@ class VzDeploy
         puts "# Architecture : #{@config["architecture"]}"
         puts "# Release:     : #{@config["release"]}"
         puts "# IP Address   : #{@config["ipaddress"]}"
-        puts "# Bridge:      : #{@config["default_bridge"]}"
+
+        if @config["venet"]
+            puts "# Venet :      : true" if @config["venet"]
+        else
+            puts "# Bridge:      : #{@config["default_bridge"]}"
+        end
 
         @c = OpenVZ::Container.new(ctid)
 
@@ -184,7 +189,7 @@ class VzDeploy
     def add_venet
         ipaddress = @config["ipaddress"]
 
-        @c.set(:ip_add, ipaddress)
+        @c.set(:ipadd, ipaddress)
     end
 
 
@@ -196,7 +201,7 @@ class VzDeploy
 
         ct_mac      = gen_mac(ctid, vlanid, false)
         host_mac    = gen_mac(ctid, vlanid, true)
-        host_ifname = 'veth%i.%i' % [ctid, vlanid]
+        host_ifname = 'veth%i.%s' % [ctid, ct_ifname]
 
         puts "* Adding interface ctid: #{ctid}, bridge: #{bridge}, vlanid: #{vlanid}, ifname: #{ct_ifname}/#{host_ifname}"
 
