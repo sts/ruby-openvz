@@ -75,7 +75,7 @@ class VzDeploy
 
     def create_container
         puts "* Creating container configuration"
-        @c.create(:ostemplate => "debian-#{@config["releaseno"]}-bootstrap", :config => "basic")
+        @c.create(:ostemplate => "debian-#{@config["releaseno"]}-bootstrap", :config => @config["vz_config_template"])
 
         puts "* Bootstrapping base system via debootstrap"
         @c.debootstrap(
