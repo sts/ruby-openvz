@@ -19,6 +19,9 @@ default_bridge: vzbrbond0
 # When veth is used, how to call the interface within the container.
 default_interface: eth0
 
+# Config template file to use (UBC et al)
+vz_config_template: unlimited
+
 # Path to openvz templates (we will create empty template files here,
 # for vzctl create.
 vz_template_path: /var/lib/vz/template
