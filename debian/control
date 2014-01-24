@@ -1,0 +1,18 @@
+Source: ruby-openvz
+Section: ruby
+Priority: optional
+Maintainer: Daniel Hofer <daniel@dhofer.com>
+Build-Depends: debhelper (>= 7.0.50~), gem2deb (>= 0.3.0~)
+Standards-Version: 3.9.3
+Vcs-Git: git://github.com/sts/ruby-openvz.git
+Homepage: http://github.com/sts/ruby-openvz
+XS-Ruby-Versions: all
+
+Package: ruby-openvz
+Architecture: all
+XB-Ruby-Versions: ${ruby:Versions}
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter
+# systemu (>= 0)
+Description: OpenVZ API
+ OpenVZ is a container based virtualization for Linux. This API will
+ allow you to easily write tools to manipulate containers on a host.
