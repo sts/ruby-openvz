@@ -1,0 +1,8 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: openvz
+Source: https://github.com/sts/ruby-openvz/
+
+Files: *
+Copyright: 2014 Stefan Schlesinger <sts@ono.at>
+License: Apache 2.0
+Files: debian/*

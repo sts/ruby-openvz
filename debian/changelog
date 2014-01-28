@@ -1,0 +1,5 @@
+ruby-openvz (1.5.5-1) stable; urgency=low
+
+  * Initial release 
+
+ -- Daniel Hofer <daniel@dhofer.com>  Fri, 24 Jan 2014 14:27:00 +0000
