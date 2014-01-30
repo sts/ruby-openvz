@@ -67,7 +67,7 @@ class VzDeploy
         file = File.expand_path("/etc/vz/vzdeploy.yml")
 
         unless File.readable?(file)
-            raise "Cannot read configuration file in /etc/vz/deploy.yml"
+            raise "Cannot read configuration file in /etc/vz/vzdeploy.yml"
         end
 
         return YAML.load(File.read(file))
