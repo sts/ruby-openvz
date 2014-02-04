@@ -11,8 +11,7 @@ XS-Ruby-Versions: all
 Package: ruby-openvz
 Architecture: all
 XB-Ruby-Versions: ${ruby:Versions}
-Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter
-# systemu (>= 0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, ruby | ruby-interpreter, ruby-systemu
 Description: OpenVZ API
  OpenVZ is a container based virtualization for Linux. This API will
  allow you to easily write tools to manipulate containers on a host.
